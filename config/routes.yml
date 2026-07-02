@@ -1,0 +1,38 @@
+# MVP route configuration for RouteStats.
+# Defines one monitored A-B route. Additional routes can be added later under `routes`.
+version: 1
+
+routes:
+  - id: home_to_work
+    name: Home to work
+    enabled: true
+    description: Example commute route from point A to point B.
+    origin:
+      label: Home
+      latitude: 52.229676
+      longitude: 21.012229
+    destination:
+      label: Work
+      latitude: 52.179190
+      longitude: 21.006724
+    travel_mode: driving
+    direction: A_to_B
+    provider:
+      name: google_maps_distance_matrix
+      options:
+        traffic_model: best_guess
+        departure_time: now
+    collection:
+      timezone: Europe/Warsaw
+      interval_minutes: 15
+      active_days:
+        - monday
+        - tuesday
+        - wednesday
+        - thursday
+        - friday
+      active_time_windows:
+        - start: "06:00"
+          end: "10:00"
+        - start: "15:00"
+          end: "19:00"
