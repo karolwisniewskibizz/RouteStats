@@ -237,9 +237,56 @@ Wariant bardziej produkcyjny:
 - Cloudflare Pages lub GitHub Pages dla dashboardu,
 - monitoring kosztów API i limitów zapytań.
 
+
+## Konfiguracja tras
+
+Pierwszy krok MVP definiuje format `config/routes.yml` dla jednej trasy A-B. Plik składa się z numeru wersji formatu oraz listy tras w polu `routes`. Wariant startowy zawiera jedną włączoną trasę `home_to_work`, którą można zastąpić docelowymi współrzędnymi przed uruchomieniem kolektora.
+
+Najważniejsze pola trasy:
+
+- `id` - stabilny identyfikator używany w nazwach plików danych, agregacjach i raportach.
+- `name` oraz `description` - czytelne etykiety pokazywane w raportach.
+- `origin` i `destination` - punkty A i B z etykietą oraz współrzędnymi `latitude` / `longitude` w WGS84.
+- `travel_mode` - tryb podróży, na start `driving`.
+- `direction` - kierunek pomiaru, na start `A_to_B`; później można dodać osobną trasę powrotną.
+- `provider` - nazwa adaptera API oraz opcje przekazywane do dostawcy routingu.
+- `collection` - ustawienia harmonogramu pomiarów: strefa czasowa, interwał, aktywne dni i okna godzinowe.
+
+Minimalny przykład struktury:
+
+```yaml
+version: 1
+routes:
+  - id: home_to_work
+    name: Home to work
+    enabled: true
+    origin:
+      label: Home
+      latitude: 52.229676
+      longitude: 21.012229
+    destination:
+      label: Work
+      latitude: 52.179190
+      longitude: 21.006724
+    travel_mode: driving
+    direction: A_to_B
+    provider:
+      name: google_maps_distance_matrix
+      options:
+        traffic_model: best_guess
+        departure_time: now
+    collection:
+      timezone: Europe/Warsaw
+      interval_minutes: 15
+      active_days: [monday, tuesday, wednesday, thursday, friday]
+      active_time_windows:
+        - start: "06:00"
+          end: "10:00"
+```
+
 ## Proponowany plan wdrożenia MVP
 
-1. Zdefiniować format `config/routes.yml` dla jednej trasy A-B.
+1. [x] Zdefiniować format `config/routes.yml` dla jednej trasy A-B.
 2. Dodać kolektor pobierający czas przejazdu z jednego dostawcy API.
 3. Zapisywać surowe obserwacje w dziennych plikach JSONL lub Parquet.
 4. Dodać wzbogacanie obserwacji o dzień tygodnia, typ dnia i święta.
