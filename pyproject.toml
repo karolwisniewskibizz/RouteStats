@@ -1,0 +1,15 @@
+[project]
+name = "routestats"
+version = "0.1.0"
+description = "RouteStats MVP collector and analytics tooling"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+test = [
+  "pytest>=8.0",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
