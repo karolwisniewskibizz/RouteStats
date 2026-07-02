@@ -81,16 +81,26 @@ Kolektor uruchamiany przez GitHub Actions powinien:
 4. zapisać obserwację w formacie append-only,
 5. opcjonalnie utworzyć Pull Request z nową porcją danych albo zapisać dane w zewnętrznym magazynie.
 
-Potencjalne źródła czasu przejazdu:
+Potencjalne źródła czasu przejazdu warto dobierać przede wszystkim po tym, czy zwracają czas przejazdu uwzględniający bieżący albo typowy ruch drogowy. Poniższa lista zaczyna się od opcji najłatwiejszych do testów w darmowym limicie lub bez opłat za samodzielne uruchomienie. Limity i cenniki API map zmieniają się często, dlatego przed wdrożeniem należy potwierdzić aktualne warunki u dostawcy.
 
-- Google Maps Distance Matrix API,
-- HERE Routing API,
-- TomTom Routing API,
-- GraphHopper,
-- OpenRouteService,
-- OSRM dla scenariuszy opartych o dane OpenStreetMap, choć bez rzeczywistego ruchu drogowego.
+| Priorytet startu | Dostawca / API | Ruch drogowy | Darmowy start | Uwagi dla RouteStats |
+| --- | --- | --- | --- | --- |
+| 1 | TomTom Routing API / Matrix Routing API / Traffic APIs | Tak: routing z ruchem oraz osobne API ruchu dla danych bieżących i historycznych | Tak: publiczny cennik TomTom pokazuje bezpłatny miesięczny limit dla wybranych API, m.in. Routing API i Matrix Routing API | Najlepszy pierwszy kandydat do MVP: prosty klucz API, konkretne endpointy do tras i macierzy, dobry kompromis między darmowym testem a danymi o ruchu. |
+| 2 | HERE Routing API | Tak: trasy mogą uwzględniać informacje o ruchu, zależnie od parametrów zapytania i planu | Tak: HERE deklaruje bezpłatną rejestrację i model pay-as-you-grow | Dobry kandydat alternatywny, szczególnie jeśli potrzebne będą profile pojazdów, większa kontrola parametrów trasy albo wdrożenie bardziej produkcyjne. |
+| 3 | Mapbox Directions API | Tak: profil `driving-traffic` obsługuje routing świadomy ruchu i zdarzeń | Tak: Mapbox komunikuje darmowe limity dla większości produktów oraz płatność po przekroczeniu limitu | Warto rozważyć, jeśli dashboard ma korzystać także z map Mapbox; trzeba osobno sprawdzić limit dla Directions API i profilu traffic. |
+| 4 | Google Routes API / Compute Routes / Compute Route Matrix | Tak: tryby `TRAFFIC_AWARE` i `TRAFFIC_AWARE_OPTIMAL` | Tak, ale w modelu Google Maps Platform z billingiem, SKU i limitami darmowego użycia zależnymi od produktu | Bardzo dobre dane i dokumentacja, lecz zwykle większa złożoność kosztowa. Do MVP lepiej dodać jako drugi adapter po walidacji modelu danych. |
+| 5 | GraphHopper Directions API | Zwykle nie jako pełny, rzeczywisty ruch w darmowych scenariuszach; zależy od oferty i danych | Często dostępny plan testowy / trial | Przydatny jako adapter porównawczy lub fallback dla czasu bez korków, ale przed wyborem trzeba potwierdzić dostępność danych traffic. |
+| 6 | OpenRouteService | Brak typowego live traffic w podstawowym routingu OSM | Tak: dobry darmowy start dla zastosowań OSM | Dobre do prototypowania schematu kolektora i tras bez kosztów, ale nie spełnia głównego celu, jeśli statystyki mają mierzyć realne korki. |
+| 7 | Własny OSRM / Valhalla na OpenStreetMap | Brak rzeczywistego live traffic bez dodatkowego płatnego lub własnego źródła danych o prędkościach | Tak, jeśli utrzymujemy własną instancję | Najlepsze jako baseline `free_flow_duration_seconds` albo niezależny fallback, nie jako główne źródło obserwacji o korkach. |
 
-Dla statystyk zależnych od bieżącego natężenia ruchu najlepiej użyć API, które zwraca czas przejazdu z uwzględnieniem aktualnego lub historycznego ruchu.
+Rekomendacja na start: zaimplementować interfejs `RoutingProvider` i pierwszy adapter dla TomTom, a równolegle zostawić w konfiguracji pola neutralne względem dostawcy (`provider`, `profile`, `traffic_mode`, `api_version`). Dzięki temu można później porównać TomTom z HERE, Mapbox albo Google bez zmiany modelu danych.
+
+Linki do bieżącej weryfikacji warunków:
+
+- TomTom Traffic APIs: <https://www.tomtom.com/products/traffic-apis/> oraz cennik: <https://docs.tomtom.com/pricing/>
+- HERE pricing: <https://www.here.com/get-started/pricing>
+- Mapbox Directions API: <https://docs.mapbox.com/api/navigation/directions/> oraz cennik: <https://www.mapbox.com/pricing>
+- Google Routes API billing: <https://developers.google.com/maps/documentation/routes/usage-and-billing>
 
 ### 3. Warstwa danych
 
