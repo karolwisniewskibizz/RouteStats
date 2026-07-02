@@ -85,7 +85,7 @@ Potencjalne źródła czasu przejazdu warto dobierać przede wszystkim po tym, c
 
 | Priorytet startu | Dostawca / API | Ruch drogowy | Darmowy start | Uwagi dla RouteStats |
 | --- | --- | --- | --- | --- |
-| 1 | TomTom Routing API / Matrix Routing API / Traffic APIs | Tak: routing z ruchem oraz osobne API ruchu dla danych bieżących i historycznych | Tak: publiczny cennik TomTom pokazuje bezpłatny miesięczny limit dla wybranych API, m.in. Routing API i Matrix Routing API | Najlepszy pierwszy kandydat do MVP: prosty klucz API, konkretne endpointy do tras i macierzy, dobry kompromis między darmowym testem a danymi o ruchu. |
+| 1 | TomTom Routing API / Matrix Routing API / Traffic APIs | Tak: routing z ruchem oraz osobne API ruchu dla danych bieżących i historycznych | Tak: publiczny cennik TomTom pokazuje bezpłatny miesięczny limit dla wybranych API, m.in. Routing API i Matrix Routing API | Pierwszy dostawca zaimplementowany w MVP: prosty klucz API, konkretne endpointy do tras i macierzy, dobry kompromis między darmowym testem a danymi o ruchu. |
 | 2 | HERE Routing API | Tak: trasy mogą uwzględniać informacje o ruchu, zależnie od parametrów zapytania i planu | Tak: HERE deklaruje bezpłatną rejestrację i model pay-as-you-grow | Dobry kandydat alternatywny, szczególnie jeśli potrzebne będą profile pojazdów, większa kontrola parametrów trasy albo wdrożenie bardziej produkcyjne. |
 | 3 | Mapbox Directions API | Tak: profil `driving-traffic` obsługuje routing świadomy ruchu i zdarzeń | Tak: Mapbox komunikuje darmowe limity dla większości produktów oraz płatność po przekroczeniu limitu | Warto rozważyć, jeśli dashboard ma korzystać także z map Mapbox; trzeba osobno sprawdzić limit dla Directions API i profilu traffic. |
 | 4 | Google Routes API / Compute Routes / Compute Route Matrix | Tak: tryby `TRAFFIC_AWARE` i `TRAFFIC_AWARE_OPTIMAL` | Tak, ale w modelu Google Maps Platform z billingiem, SKU i limitami darmowego użycia zależnymi od produktu | Bardzo dobre dane i dokumentacja, lecz zwykle większa złożoność kosztowa. Do MVP lepiej dodać jako drugi adapter po walidacji modelu danych. |
@@ -284,10 +284,30 @@ routes:
           end: "10:00"
 ```
 
+
+### Kolektor MVP
+
+Krok 2 planu wdrożenia realizuje moduł `src/collector`. Kolektor:
+
+1. odczytuje włączone trasy z `config/routes.yml`,
+2. tworzy klienta dostawcy wskazanego w `provider.name`,
+3. pobiera aktualny czas przejazdu z TomTom Routing API albo Google Distance Matrix API,
+4. wypisuje znormalizowaną obserwację jako JSON Lines na standardowe wyjście.
+
+Uruchomienie lokalne:
+
+```bash
+TOMTOM_API_KEY="..." python -m src.collector.collect --routes config/routes.yml
+```
+
+Alternatywnie klucz można przekazać jako `ROUTING_API_KEY` albo argument `--api-key`. Domyślna trasa MVP używa `tomtom_routing`, bo TomTom jest pierwszym dostawcą przewidzianym do uruchomienia, ale kolektor nadal obsługuje `google_maps_distance_matrix` do późniejszego porównania dostawców.
+
+Klucz API dla uruchomień w GitHub Actions należy zapisać jako sekret repozytorium GitHub: `Settings` → `Secrets and variables` → `Actions` → zakładka `Secrets` → `New repository secret`. Dla obecnej konfiguracji TomTom utwórz sekret `TOMTOM_API_KEY`; opcjonalnie można użyć wspólnej nazwy `ROUTING_API_KEY`. Jeśli w przyszłości trasa zostanie przełączona na Google, dodaj osobny sekret `GOOGLE_MAPS_API_KEY`. W workflow sekret będzie dostępny jako `${{ secrets.TOMTOM_API_KEY }}` albo analogicznie dla wybranej nazwy.
+
 ## Proponowany plan wdrożenia MVP
 
 1. [x] Zdefiniować format `config/routes.yml` dla jednej trasy A-B.
-2. Dodać kolektor pobierający czas przejazdu z jednego dostawcy API.
+2. [x] Dodać kolektor pobierający czas przejazdu z jednego dostawcy API.
 3. Zapisywać surowe obserwacje w dziennych plikach JSONL lub Parquet.
 4. Dodać wzbogacanie obserwacji o dzień tygodnia, typ dnia i święta.
 5. Utworzyć agregacje po 15-minutowych bucketach czasu.

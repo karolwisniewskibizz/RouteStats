@@ -18,10 +18,11 @@ routes:
     travel_mode: driving
     direction: A_to_B
     provider:
-      name: google_maps_distance_matrix
+      name: tomtom_routing
       options:
-        traffic_model: best_guess
-        departure_time: now
+        traffic: true
+        routeType: fastest
+        travelMode: car
     collection:
       timezone: Europe/Warsaw
       interval_minutes: 15
